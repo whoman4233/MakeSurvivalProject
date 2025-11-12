@@ -1,8 +1,14 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerCondition : MonoBehaviour
+public interface IDamageable
+{
+    void TakePhysicalDamage(int damage);
+}
+
+public class PlayerCondition : MonoBehaviour, IDamageable
 {
     public UICondition uiCondition;
 
@@ -11,6 +17,9 @@ public class PlayerCondition : MonoBehaviour
     Condition stemina { get { return uiCondition.stamina; } }
 
     public float noHungerHealthDecay;
+
+    public event Action onTakeDamage;
+
     // Update is called once per frame
     void Update()
     {
@@ -19,7 +28,7 @@ public class PlayerCondition : MonoBehaviour
 
         if (hunger.curValue <= 0f)
         {
-            health.Subtract(noHungerHealthDecay);
+            health.Subtract(noHungerHealthDecay * Time.deltaTime);
         }
 
         if (health.curValue <= 0f)
@@ -42,5 +51,22 @@ public class PlayerCondition : MonoBehaviour
     public void Die()
     {
         Debug.Log("»ç¸Á");
+    }
+
+    public void TakePhysicalDamage(int damage)
+    {
+        health.Subtract(damage);
+        onTakeDamage?.Invoke();
+    }
+
+    public bool UseStamina(float amount)
+    {
+        if(stemina.curValue - amount < 0f)
+        {
+            return false;
+        }
+
+        stemina.Subtract(amount);
+        return true;
     }
 }
